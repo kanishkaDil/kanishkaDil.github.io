@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Jenkins Pipeline — Microlearning + Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0D1117;
+  --surface:#161B22;
+  --surface2:#21262D;
+  --border:#30363D;
+  --orange:#F97316;
+  --orange-dim:#7C3813;
+  --green:#3FB950;
+  --green-dim:#1A3E22;
+  --blue:#58A6FF;
+  --blue-dim:#1B3A6B;
+  --purple:#BC8CFF;
+  --red:#F85149;
+  --yellow:#E3B341;
+  --text:#E6EDF3;
+  --muted:#8B949E;
+  --code-bg:#0D1117;
+  --font-mono:'JetBrains Mono',monospace;
+  --font-body:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-body)}
+
+/* ─── SLIDE ENGINE ─────────────────────────────────────────────────── */
+#app{width:100vw;height:100vh;position:relative;overflow:hidden}
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:0;opacity:0;pointer-events:none;
+  transition:opacity .4s ease,transform .4s ease;
+  transform:translateX(40px);
+}
+.slide.active{opacity:1;pointer-events:all;transform:translateX(0)}
+.slide.prev{opacity:0;transform:translateX(-40px)}
+
+/* ─── NAV ──────────────────────────────────────────────────────────── */
+#nav{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:12px;z-index:100;
+  background:rgba(22,27,34,.9);border:1px solid var(--border);
+  border-radius:40px;padding:10px 18px;backdrop-filter:blur(12px);
+}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--border);cursor:pointer;transition:all .2s}
+.dot.active{background:var(--orange);transform:scale(1.4)}
+.dot:hover{background:var(--muted)}
+.nav-btn{
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:26px;padding:0 4px;transition:color .2s;line-height:1;
+  font-family:var(--font-mono);
+}
+.nav-btn:hover{color:var(--text)}
+#slide-counter{font-family:var(--font-mono);font-size:16px;color:var(--muted);min-width:40px;text-align:center}
+#progress-bar{
+  position:fixed;top:0;left:0;height:2px;background:var(--orange);
+  transition:width .4s ease;z-index:200;
+  box-shadow:0 0 8px var(--orange);
+}
+
+/* ─── SLIDE CHROME ─────────────────────────────────────────────────── */
+.slide-header{
+  display:flex;align-items:center;gap:14px;
+  padding:20px 52px 0;
+  font-family:var(--font-mono);font-size:20.5px;color:var(--muted);
+  flex-shrink:0;
+}
+.slide-tag{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:4px;padding:4px 12px;font-size:19px;
+  font-family:var(--font-mono);
+}
+.slide-tag.orange{border-color:var(--orange-dim);color:var(--orange)}
+.slide-tag.green{border-color:var(--green-dim);color:var(--green)}
+.slide-tag.blue{border-color:var(--blue-dim);color:var(--blue)}
+.slide-content{flex:1;padding:20px 56px 86px;overflow:hidden}
+
+/* ─── TYPOGRAPHY ───────────────────────────────────────────────────── */
+.title-xl{font-size:clamp(75.5px,7.5vw,139px);font-weight:700;line-height:1.0;letter-spacing:-2px}
+.title-lg{font-size:clamp(46.5px,4.5vw,75.5px);font-weight:700;line-height:1.1;letter-spacing:-1px}
+.title-md{font-size:clamp(32px,2.8vw,46.5px);font-weight:600}
+.subtitle{font-size:clamp(24.5px,1.9vw,32px);color:var(--muted);font-weight:300;line-height:1.5}
+.accent{color:var(--orange)}
+.accent-green{color:var(--green)}
+.accent-blue{color:var(--blue)}
+.mono{font-family:var(--font-mono)}
+
+/* ─── CARDS ────────────────────────────────────────────────────────── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:28px;
+}
+.card-grid{display:grid;gap:18px}
+.card-grid.cols-3{grid-template-columns:repeat(3,1fr)}
+.card-grid.cols-2{grid-template-columns:repeat(2,1fr)}
+.card-grid.cols-4{grid-template-columns:repeat(4,1fr)}
+
+.card-icon{font-size:52px;margin-bottom:14px}
+.card-title{font-size:26px;font-weight:600;margin-bottom:8px}
+.card-body{font-size:22px;color:var(--muted);line-height:1.6}
+
+.card.orange-top{border-top:3px solid var(--orange)}
+.card.green-top{border-top:3px solid var(--green)}
+.card.blue-top{border-top:3px solid var(--blue)}
+.card.purple-top{border-top:3px solid var(--purple)}
+
+/* ─── CODE BLOCK ───────────────────────────────────────────────────── */
+.code-wrap{
+  background:#010409;border:1px solid var(--border);border-radius:8px;
+  font-family:var(--font-mono);font-size:22px;line-height:1.8;
+  overflow:auto;position:relative;
+}
+.code-titlebar{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface2);padding:10px 16px;border-bottom:1px solid var(--border);
+}
+.dot-r{width:12px;height:12px;border-radius:50%;background:#F85149}
+.dot-y{width:12px;height:12px;border-radius:50%;background:#E3B341}
+.dot-g{width:12px;height:12px;border-radius:50%;background:#3FB950}
+.code-filename{font-size:19px;color:var(--muted);margin-left:6px}
+.code-body{padding:18px 22px}
+.kw{color:#FF7B72}
+.fn{color:#D2A8FF}
+.str{color:#A5D6FF}
+.val{color:#FFA657}
+.cmt{color:#8B949E;font-style:italic}
+.prop{color:#79C0FF}
+
+/* ─── SLIDE 1 — TITLE ──────────────────────────────────────────────── */
+#s1{
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 60% 50% at 80% 40%, rgba(249,115,22,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(88,166,255,.05) 0%, transparent 60%);
+}
+.s1-layout{
+  flex:1;display:flex;flex-direction:column;justify-content:center;
+  padding:0 48px 60px;gap:28px;
+}
+.s1-badge{
+  display:inline-flex;align-items:center;gap:10px;
+  background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);
+  border-radius:20px;padding:7px 18px;
+  font-family:var(--font-mono);font-size:20.5px;color:var(--orange);
+  width:fit-content;
+}
+.badge-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.s1-toc{
+  display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;
+}
+.toc-item{
+  font-family:var(--font-mono);font-size:20.5px;color:var(--muted);
+  border:1px solid var(--border);border-radius:4px;padding:6px 14px;
+}
+.toc-item span{color:var(--orange);margin-right:8px}
+
+/* ─── SLIDE 2 — WHAT ───────────────────────────────────────────────── */
+.definition-box{
+  background:var(--surface);border-left:4px solid var(--orange);
+  border-radius:0 8px 8px 0;padding:28px 36px;
+  font-size:29px;line-height:1.65;margin-bottom:20px;
+}
+
+/* ─── SLIDE 3 — WHY ────────────────────────────────────────────────── */
+.compare-grid{display:grid;grid-template-columns:1fr 50px 1fr;gap:0;height:100%}
+.compare-col{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px}
+.compare-col.bad{border-top:3px solid var(--red)}
+.compare-col.good{border-top:3px solid var(--green)}
+.compare-arrow{display:flex;align-items:center;justify-content:center;font-size:43.5px;color:var(--orange)}
+.compare-header{display:flex;align-items:center;gap:10px;font-size:24.5px;font-weight:600;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.compare-item{
+  display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;
+  font-size:23px;line-height:1.5;
+}
+.compare-item .icon{font-size:29px;flex-shrink:0;margin-top:1px}
+
+/* ─── SLIDE 4 — CI/CD ──────────────────────────────────────────────── */
+.pipeline-flow{
+  display:flex;align-items:stretch;gap:0;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  overflow:hidden;margin-bottom:16px;
+}
+.pf-stage{
+  flex:1;padding:18px 12px;text-align:center;position:relative;
+  border-right:1px solid var(--border);
+}
+.pf-stage:last-child{border-right:none}
+.pf-stage::after{
+  content:'›';position:absolute;right:-10px;top:50%;transform:translateY(-50%);
+  color:var(--muted);font-size:32px;z-index:1;
+}
+.pf-stage:last-child::after{display:none}
+.pf-icon{font-size:46.5px;margin-bottom:10px}
+.pf-label{font-size:22px;font-weight:600;color:var(--text)}
+.pf-desc{font-size:19px;color:var(--muted);margin-top:5px;line-height:1.4}
+.pf-stage.ci-stage{background:rgba(88,166,255,.05)}
+.pf-stage.cd-stage{background:rgba(249,115,22,.05)}
+
+.legend-row{display:flex;gap:14px}
+.legend-badge{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;padding:18px 24px;flex:1;font-size:22px;
+}
+.legend-key{
+  font-family:var(--font-mono);font-size:35px;font-weight:700;
+  border-radius:4px;padding:4px 12px;
+}
+.legend-key.ci{background:rgba(88,166,255,.15);color:var(--blue)}
+.legend-key.cd{background:rgba(249,115,22,.15);color:var(--orange)}
+
+/* ─── SLIDE 5 — SERVER ─────────────────────────────────────────────── */
+.arch-grid{display:grid;grid-template-columns:1.2fr .8fr 1.2fr;gap:16px;height:100%}
+.arch-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  display:flex;flex-direction:column;padding:22px;
+}
+.arch-title{
+  font-size:22px;font-weight:600;font-family:var(--font-mono);
+  padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.arch-step{
+  display:flex;align-items:flex-start;gap:12px;
+  margin-bottom:12px;font-size:20.5px;line-height:1.5;
+}
+.step-num{
+  min-width:30px;height:30px;border-radius:50%;
+  font-family:var(--font-mono);font-size:17.5px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  background:rgba(249,115,22,.2);color:var(--orange);
+}
+.arch-arrow{
+  display:flex;align-items:center;justify-content:center;
+  font-size:40.5px;color:var(--orange);flex-shrink:0;align-self:center;
+  flex-direction:column;gap:5px;
+}
+.arch-arrow small{font-size:17.5px;color:var(--muted);font-family:var(--font-mono)}
+.agent-item{
+  display:flex;align-items:center;gap:10px;margin-bottom:10px;
+  font-size:20.5px;padding:8px 10px;border-radius:4px;
+  background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.2);
+}
+
+/* ─── SLIDE 6 — JENKINSFILE ────────────────────────────────────────── */
+.jf-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;height:100%}
+.component-list{display:flex;flex-direction:column;gap:9px}
+.comp-item{
+  display:flex;align-items:flex-start;gap:14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:12px 14px;transition:border-color .2s;
+}
+.comp-item:hover{border-color:var(--orange)}
+.comp-bar{width:4px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:16px}
+.comp-name{font-family:var(--font-mono);font-size:22px;font-weight:600;margin-bottom:4px}
+.comp-desc{font-size:19px;color:var(--muted);line-height:1.4}
+
+/* ─── SLIDE 7 — DEPLOY ─────────────────────────────────────────────── */
+.deploy-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;height:100%;align-items:stretch}
+.deploy-step{
+  background:var(--surface);border:1px solid var(--border);
+  padding:22px 18px;display:flex;flex-direction:column;gap:12px;
+  position:relative;
+}
+.deploy-step::after{
+  content:'→';position:absolute;right:-14px;top:50%;transform:translateY(-50%);
+  color:var(--orange);font-size:32px;z-index:1;font-weight:700;
+}
+.deploy-step:last-child::after{display:none}
+.deploy-step:first-child{border-radius:8px 0 0 8px}
+.deploy-step:last-child{border-radius:0 8px 8px 0}
+.step-badge{
+  width:42px;height:42px;border-radius:50%;
+  font-family:var(--font-mono);font-size:22px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(249,115,22,.15);color:var(--orange);border:1px solid rgba(249,115,22,.3);
+  flex-shrink:0;
+}
+.deploy-icon{font-size:37.5px}
+.deploy-title{font-size:23px;font-weight:600}
+.deploy-code{
+  font-family:var(--font-mono);font-size:19px;color:var(--muted);
+  background:#010409;border:1px solid var(--border);border-radius:4px;
+  padding:10px 12px;line-height:1.8;flex:1;overflow:hidden;
+}
+.deploy-code .hl{color:var(--green)}
+.deploy-code .cmd{color:var(--blue)}
+.tip-bar{
+  background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.2);
+  border-radius:6px;padding:12px 18px;font-size:20.5px;
+  display:flex;align-items:center;gap:12px;margin-top:12px;color:var(--green);
+  flex-shrink:0;
+}
+
+/* ─── SLIDE 8 — RECAP ──────────────────────────────────────────────── */
+.recap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;height:100%}
+.recap-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:20px;display:flex;flex-direction:column;gap:10px;
+  transition:border-color .2s,transform .2s;cursor:default;
+}
+.recap-card:hover{border-color:var(--orange);transform:translateY(-2px)}
+.recap-num{font-family:var(--font-mono);font-size:19px;color:var(--muted)}
+.recap-title{font-size:26px;font-weight:600;display:flex;align-items:center;gap:10px}
+.recap-body{font-size:20.5px;color:var(--muted);line-height:1.55;flex:1}
+.next-cta{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.25);
+  border-radius:8px;padding:14px 22px;margin-top:8px;flex-shrink:0;
+}
+.cta-btn{
+  background:var(--orange);color:white;border:none;border-radius:6px;
+  padding:10px 24px;font-family:var(--font-mono);font-size:22px;font-weight:600;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;
+}
+.cta-btn:hover{background:#EA6C0A;transform:translateX(3px)}
+
+/* ─── SLIDE 9 — DEMO ───────────────────────────────────────────────── */
+#s9{background:var(--bg)}
+.demo-header{
+  padding:20px 36px;display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.demo-title{font-family:var(--font-mono);font-size:23px;font-weight:600;display:flex;align-items:center;gap:12px}
+.demo-controls{display:flex;align-items:center;gap:14px}
+.run-btn{
+  background:var(--green);color:#000;border:none;border-radius:6px;
+  padding:14px 30px;font-family:var(--font-mono);font-size:22px;font-weight:700;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;
+}
+.run-btn:hover:not(:disabled){background:#2EA043;transform:translateY(-1px)}
+.run-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.run-btn.running{background:var(--yellow);color:#000}
+.run-btn.failed{background:var(--red);color:#fff}
+.reset-btn{
+  background:var(--surface2);color:var(--muted);border:1px solid var(--border);
+  border-radius:6px;padding:10px 16px;font-family:var(--font-mono);font-size:20.5px;
+  cursor:pointer;transition:all .2s;
+}
+.reset-btn:hover{border-color:var(--muted);color:var(--text)}
+.fail-toggle{display:flex;align-items:center;gap:8px;font-size:20.5px;color:var(--muted);font-family:var(--font-mono);cursor:pointer}
+.fail-toggle input{accent-color:var(--red);width:16px;height:16px}
+
+.demo-body{flex:1;display:grid;grid-template-columns:380px 1fr;overflow:hidden}
+.demo-left{
+  border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;
+}
+.demo-right{display:flex;flex-direction:column;overflow:hidden}
+
+/* Pipeline stages */
+.stages-panel{
+  border-bottom:1px solid var(--border);padding:22px 28px;flex-shrink:0;
+}
+.stages-row{display:flex;align-items:center;gap:8px}
+.stage-node{
+  flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:20px 14px;text-align:center;transition:all .3s;position:relative;
+}
+.stage-node.pending{}
+.stage-node.running{
+  border-color:var(--yellow);background:rgba(227,179,65,.08);
+  animation:stage-pulse .8s ease-in-out infinite alternate;
+}
+@keyframes stage-pulse{from{box-shadow:0 0 0 0 rgba(227,179,65,.2)}to{box-shadow:0 0 14px 2px rgba(227,179,65,.15)}}
+.stage-node.success{border-color:var(--green);background:rgba(63,185,80,.07)}
+.stage-node.failed{border-color:var(--red);background:rgba(248,81,73,.08)}
+.stage-icon{font-size:37.5px;margin-bottom:6px}
+.stage-name{font-size:19px;font-weight:600;font-family:var(--font-mono);color:var(--text)}
+.stage-time{font-size:17.5px;color:var(--muted);margin-top:4px;font-family:var(--font-mono)}
+.stage-arrow{color:var(--muted);font-size:26px;flex-shrink:0}
+
+.spinner{
+  width:26px;height:26px;border:3px solid rgba(227,179,65,.2);
+  border-top-color:var(--yellow);border-radius:50%;
+  animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Console */
+.console-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.panel-label{
+  padding:13px 20px;font-family:var(--font-mono);font-size:19px;color:var(--muted);
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.console-output{
+  flex:1;overflow-y:auto;padding:16px 20px;
+  font-family:var(--font-mono);font-size:20.5px;line-height:1.8;
+  background:#010409;
+}
+.console-output::-webkit-scrollbar{width:5px}
+.console-output::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.log-line{display:flex;gap:14px;margin-bottom:1px;animation:log-in .15s ease}
+@keyframes log-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.log-time{color:#3D444D;flex-shrink:0;min-width:75px}
+.log-text.ok{color:var(--green)}
+.log-text.warn{color:var(--yellow)}
+.log-text.err{color:var(--red)}
+.log-text.info{color:var(--blue)}
+.log-text.cmd{color:var(--purple)}
+.log-text.plain{color:#8B949E}
+.log-text.header{color:var(--text);font-weight:700}
+
+/* Metrics bar */
+.metrics-bar{
+  display:flex;gap:0;border-top:1px solid var(--border);flex-shrink:0;
+}
+.metric{
+  flex:1;padding:16px 22px;border-right:1px solid var(--border);
+  font-family:var(--font-mono);font-size:19px;
+}
+.metric:last-child{border-right:none}
+.metric-label{color:var(--muted);margin-bottom:3px}
+.metric-val{font-size:32px;font-weight:700;color:var(--text)}
+.metric-val.green{color:var(--green)}
+.metric-val.yellow{color:var(--yellow)}
+.metric-val.red{color:var(--red)}
+
+/* Jenkinsfile panel */
+.jf-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.jf-editor{
+  flex:1;overflow-y:auto;padding:16px 20px;
+  font-family:var(--font-mono);font-size:20.5px;line-height:1.9;
+  background:#010409;color:var(--muted);
+  white-space:pre;
+}
+.jf-editor::-webkit-scrollbar{width:5px}
+.jf-editor::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.hl-stage{
+  display:block;margin:-1px -20px;padding:1px 20px;
+  transition:background .3s;
+}
+.hl-stage.active-stage{background:rgba(227,179,65,.08)}
+.hl-stage.done-stage{background:rgba(63,185,80,.05)}
+.hl-stage.fail-stage{background:rgba(248,81,73,.07)}
+
+/* Responsive tweaks */
+@media (max-width:900px){
+  .demo-body{grid-template-columns:1fr}
+  .demo-left{border-right:none;border-bottom:1px solid var(--border);max-height:40%}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══ PROGRESS BAR ══ -->
+<div id="progress-bar"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 1 — TITLE
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide active" id="s1">
+  <div class="s1-layout">
+    <div class="s1-badge">
+      <span class="badge-dot"></span>
+      MICROLEARNING · DEVELOPERS
+    </div>
+    <div>
+      <div class="title-xl" style="color:var(--text)">Jenkins</div>
+      <div class="title-xl accent">Pipeline</div>
+    </div>
+    <div class="subtitle" style="max-width:520px">
+      From zero to deploy — everything you need to automate<br/>
+      your build, test, and release workflow.
+    </div>
+    <div class="s1-toc">
+      <div class="toc-item"><span>01</span>What</div>
+      <div class="toc-item"><span>02</span>Why</div>
+      <div class="toc-item"><span>03</span>CI/CD</div>
+      <div class="toc-item"><span>04</span>Server</div>
+      <div class="toc-item"><span>05</span>Jenkinsfile</div>
+      <div class="toc-item"><span>06</span>Deploy</div>
+      <div class="toc-item"><span>07</span>Recap</div>
+      <div class="toc-item" style="border-color:rgba(63,185,80,.4);color:var(--green)"><span style="color:var(--green)">▶</span>Demo</div>
+    </div>
+    <div style="font-family:var(--font-mono);font-size:20.5px;color:var(--muted);margin-top:8px">
+      Use <kbd style="background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:3px">←→</kbd> or <kbd style="background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:3px">Space</kbd> to navigate
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 2 — WHAT IS JENKINS?
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="slide-header">
+    <span class="slide-tag orange">01 / WHAT</span>
+    <span style="color:var(--border)">─────</span>
+    <span>What is Jenkins?</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:16px">
+    <div class="definition-box">
+      <span class="accent" style="font-weight:700">Jenkins</span> is an open-source 
+      <span style="color:var(--blue)">automation server</span> that helps teams 
+      <span class="accent" style="font-weight:600">build, test, and deploy</span> 
+      software continuously, reliably, and without manual intervention.
+    </div>
+    <div class="card-grid cols-3" style="flex:1">
+      <div class="card orange-top">
+        <div class="card-icon">🖥️</div>
+        <div class="card-title">Automation Server</div>
+        <div class="card-body">Runs your build &amp; test jobs automatically on every code change — no manual trigger needed.</div>
+        <div style="margin-top:14px;font-family:var(--font-mono);font-size:19px;color:var(--muted)">
+          free &amp; open source · Java-based · self-hosted
+        </div>
+      </div>
+      <div class="card blue-top">
+        <div class="card-icon">📄</div>
+        <div class="card-title">Pipeline as Code</div>
+        <div class="card-body">Define your entire workflow in a <span class="mono" style="color:var(--orange)">Jenkinsfile</span> — version-controlled, reviewable, and repeatable.</div>
+        <div style="margin-top:14px;font-family:var(--font-mono);font-size:19px;color:var(--muted)">
+          Groovy DSL · declarative syntax
+        </div>
+      </div>
+      <div class="card green-top">
+        <div class="card-icon">🔌</div>
+        <div class="card-title">Plugin Ecosystem</div>
+        <div class="card-body">1,800+ plugins to integrate with Git, Docker, Kubernetes, Slack, AWS, Jira, and virtually everything else.</div>
+        <div style="margin-top:14px;font-family:var(--font-mono);font-size:19px;color:var(--muted)">
+          Git · Docker · K8s · Slack · AWS
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:28px;font-family:var(--font-mono);font-size:20.5px;color:var(--muted)">
+      <span>⭐ 23k+ GitHub stars</span>
+      <span>🏢 Used by Netflix, LinkedIn, NASA</span>
+      <span>📅 Released 2011 (Hudson fork)</span>
+      <span>☕ Runs on JVM</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 3 — WHY JENKINS?
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="slide-header">
+    <span class="slide-tag orange">02 / WHY</span>
+    <span style="color:var(--border)">─────</span>
+    <span>Why Jenkins?</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:12px">
+    <div class="compare-grid" style="flex:1;align-items:stretch">
+      <div class="compare-col bad">
+        <div class="compare-header">
+          <span style="color:var(--red)">✕</span>
+          <span style="color:var(--red)">Without Jenkins</span>
+        </div>
+        <div class="compare-item"><span class="icon">😩</span><span>Manual builds — someone runs <code style="color:var(--muted);font-family:var(--font-mono)">./build.sh</code> by hand on every merge</span></div>
+        <div class="compare-item"><span class="icon">🤷</span><span>"Works on my machine" — environment drift between devs</span></div>
+        <div class="compare-item"><span class="icon">🕑</span><span>Tests run only before major releases, bugs pile up</span></div>
+        <div class="compare-item"><span class="icon">📦</span><span>Deployments are manual, error-prone, and stressful</span></div>
+        <div class="compare-item"><span class="icon">📉</span><span>No audit trail — who deployed what and when?</span></div>
+        <div class="compare-item"><span class="icon">🧩</span><span>Onboarding takes days: "ask John how to release"</span></div>
+      </div>
+      <div class="compare-arrow">→</div>
+      <div class="compare-col good">
+        <div class="compare-header">
+          <span style="color:var(--green)">✓</span>
+          <span style="color:var(--green)">With Jenkins</span>
+        </div>
+        <div class="compare-item"><span class="icon">⚡</span><span>Every <code style="color:var(--green);font-family:var(--font-mono)">git push</code> triggers a build automatically via webhook</span></div>
+        <div class="compare-item"><span class="icon">🐳</span><span>Consistent Docker-based agents — same env every time</span></div>
+        <div class="compare-item"><span class="icon">✅</span><span>Tests run on every commit, failures reported in minutes</span></div>
+        <div class="compare-item"><span class="icon">🚀</span><span>One-click or fully automatic deployments to any environment</span></div>
+        <div class="compare-item"><span class="icon">📋</span><span>Full build history, logs, and stage-by-stage visibility</span></div>
+        <div class="compare-item"><span class="icon">📖</span><span>Jenkinsfile IS the runbook — self-documenting process</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 4 — CI/CD
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="slide-header">
+    <span class="slide-tag orange">03 / CI/CD</span>
+    <span style="color:var(--border)">─────</span>
+    <span>The Big Picture</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:14px">
+    <div class="legend-row">
+      <div class="legend-badge">
+        <span class="legend-key ci">CI</span>
+        <div>
+          <div style="font-weight:600;font-size:23px">Continuous Integration</div>
+          <div style="font-size:20.5px;color:var(--muted)">Automatically merge, build &amp; test on every commit</div>
+        </div>
+      </div>
+      <div class="legend-badge">
+        <span class="legend-key cd">CD</span>
+        <div>
+          <div style="font-weight:600;font-size:23px">Continuous Delivery / Deployment</div>
+          <div style="font-size:20.5px;color:var(--muted)">Automatically deliver tested code to staging or production</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-flow" style="flex:1">
+      <div class="pf-stage ci-stage">
+        <div class="pf-icon">💻</div>
+        <div class="pf-label">Code Commit</div>
+        <div class="pf-desc">Developer pushes to Git</div>
+        <div style="margin-top:10px;font-family:var(--font-mono);font-size:19px;color:var(--blue)">git push</div>
+      </div>
+      <div class="pf-stage ci-stage">
+        <div class="pf-icon">🔔</div>
+        <div class="pf-label">Webhook Trigger</div>
+        <div class="pf-desc">GitHub/GitLab pings Jenkins</div>
+        <div style="margin-top:10px;font-family:var(--font-mono);font-size:19px;color:var(--blue)">HTTP POST</div>
+      </div>
+      <div class="pf-stage ci-stage">
+        <div class="pf-icon">🔨</div>
+        <div class="pf-label">Build</div>
+        <div class="pf-desc">Compile, package, lint</div>
+        <div style="margin-top:10px;font-family:var(--font-mono);font-size:19px;color:var(--orange)">mvn package</div>
+      </div>
+      <div class="pf-stage ci-stage">
+        <div class="pf-icon">🧪</div>
+        <div class="pf-label">Test</div>
+        <div class="pf-desc">Unit, integration, coverage</div>
+        <div style="margin-top:10px;font-family:var(--font-mono);font-size:19px;color:var(--orange)">pytest / jest</div>
+      </div>
+      <div class="pf-stage cd-stage">
+        <div class="pf-icon">📦</div>
+        <div class="pf-label">Package</div>
+        <div class="pf-desc">Docker image, artifact</div>
+        <div style="margin-top:10px;font-family:var(--font-mono);font-size:19px;color:var(--orange)">docker build</div>
+      </div>
+      <div class="pf-stage cd-stage">
+        <div class="pf-icon">🧩</div>
+        <div class="pf-label">Deploy Staging</div>
+        <div class="pf-desc">Push to test environment</div>
+        <div style="margin-top:10px;font-family:var(--font-mono);font-size:19px;color:var(--orange)">helm upgrade</div>
+      </div>
+      <div class="pf-stage cd-stage">
+        <div class="pf-icon">🚀</div>
+        <div class="pf-label">Release Prod</div>
+        <div class="pf-desc">Auto or approval gate</div>
+        <div style="margin-top:10px;font-family:var(--font-mono);font-size:19px;color:var(--orange)">input('OK?')</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:16px;flex-shrink:0">
+      <div style="background:rgba(88,166,255,.07);border:1px solid rgba(88,166,255,.2);border-radius:6px;padding:12px 18px;flex:1;font-size:22px">
+        <span style="color:var(--blue);font-weight:600">CI boundary:</span><span style="color:var(--muted)"> Everything up to and including Test. Goal: fast feedback (&lt;10 min)</span>
+      </div>
+      <div style="background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.2);border-radius:6px;padding:12px 18px;flex:1;font-size:22px">
+        <span style="color:var(--orange);font-weight:600">CD boundary:</span><span style="color:var(--muted)"> Package → Staging → Production. Gate with approvals for prod</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 5 — SERVER / ARCHITECTURE
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s5">
+  <div class="slide-header">
+    <span class="slide-tag orange">04 / SERVER</span>
+    <span style="color:var(--border)">─────</span>
+    <span>Behind the Scenes</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:12px">
+    <div class="arch-grid" style="flex:1">
+      <!-- LEFT: Developer + Git -->
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="arch-box" style="border-top:2px solid var(--blue)">
+          <div class="arch-title">💻 <span style="color:var(--blue)">Developer</span></div>
+          <div style="font-size:20.5px;color:var(--muted);line-height:1.7">
+            1. Writes code locally<br/>
+            2. Commits &amp; pushes to Git<br/>
+            3. Receives build notification
+          </div>
+        </div>
+        <div style="text-align:center;font-size:22px;color:var(--muted);font-family:var(--font-mono)">↓ git push</div>
+        <div class="arch-box" style="border-top:2px solid #F05033;flex:1">
+          <div class="arch-title">📦 <span style="color:#F05033">Git Repository</span></div>
+          <div style="font-size:20.5px;color:var(--muted);line-height:1.7">
+            Stores: source code, <span style="color:var(--orange)">Jenkinsfile</span><br/>
+            On push → fires <span style="color:var(--yellow)">webhook</span> to Jenkins<br/><br/>
+            <span style="color:var(--muted)">GitHub / GitLab / Bitbucket</span>
+          </div>
+        </div>
+      </div>
+      <!-- MIDDLE ARROW + JENKINS MASTER -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 4px">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+          <div style="font-family:var(--font-mono);font-size:16px;color:var(--yellow)">webhook</div>
+          <div style="font-size:37.5px;color:var(--orange)">→</div>
+        </div>
+        <div class="arch-box" style="border-top:2px solid var(--orange);width:100%;min-height:200px">
+          <div class="arch-title">⚙️ <span style="color:var(--orange)">Jenkins Master</span></div>
+          <div class="arch-step"><span class="step-num">1</span><span>Receives webhook</span></div>
+          <div class="arch-step"><span class="step-num">2</span><span>Fetches Jenkinsfile</span></div>
+          <div class="arch-step"><span class="step-num">3</span><span>Parses pipeline stages</span></div>
+          <div class="arch-step"><span class="step-num">4</span><span>Schedules jobs on agents</span></div>
+          <div class="arch-step"><span class="step-num">5</span><span>Collects results &amp; notifies</span></div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px">
+          <div style="font-size:37.5px;color:var(--green)">→</div>
+          <div style="font-family:var(--font-mono);font-size:17.5px;color:var(--green)">dispatch</div>
+        </div>
+      </div>
+      <!-- RIGHT: Agents -->
+      <div class="arch-box" style="border-top:2px solid var(--green)">
+        <div class="arch-title">🤖 <span style="color:var(--green)">Build Agents</span></div>
+        <div style="font-size:20.5px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+          Worker nodes that run the actual jobs. Can be static machines or ephemeral Docker containers.
+        </div>
+        <div class="agent-item">🔨 <span>Build Agent — compile &amp; package</span></div>
+        <div class="agent-item">🧪 <span>Test Agent — run test suites</span></div>
+        <div class="agent-item">🐳 <span>Docker Agent — containerized builds</span></div>
+        <div class="agent-item">☁️ <span>Cloud Agent — AWS/GCP/K8s dynamic</span></div>
+        <div style="margin-top:16px;font-size:19px;color:var(--muted);font-family:var(--font-mono)">
+          label: 'linux' | 'docker' | 'gpu'
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 6 — JENKINSFILE
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s6">
+  <div class="slide-header">
+    <span class="slide-tag orange">05 / JENKINSFILE</span>
+    <span style="color:var(--border)">─────</span>
+    <span>Components</span>
+  </div>
+  <div class="slide-content">
+    <div class="jf-layout">
+      <!-- Code -->
+      <div class="code-wrap">
+        <div class="code-titlebar">
+          <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+          <span class="code-filename">Jenkinsfile</span>
+        </div>
+        <div class="code-body"><pre style="margin:0;line-height:1.8"><span class="kw">pipeline</span> {
+
+  <span class="prop">agent</span> <span class="val">any</span>          <span class="cmt">// run on any available agent</span>
+
+  <span class="prop">environment</span> {
+    <span class="fn">APP_NAME</span> = <span class="str">'my-service'</span>
+    <span class="fn">DEPLOY_ENV</span> = <span class="str">'production'</span>
+  }
+
+  <span class="prop">stages</span> {
+
+    <span class="kw">stage</span>(<span class="str">'Build'</span>) {
+      <span class="prop">steps</span> {
+        sh <span class="str">'./gradlew build'</span>
+        <span class="fn">archiveArtifacts</span> <span class="str">'build/libs/*.jar'</span>
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'Test'</span>) {
+      <span class="prop">steps</span> {
+        sh <span class="str">'./gradlew test'</span>
+        <span class="fn">junit</span> <span class="str">'build/test-results/**/*.xml'</span>
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'Deploy'</span>) {
+      <span class="prop">when</span> { branch <span class="str">'main'</span> }
+      <span class="prop">steps</span> {
+        sh <span class="str">'./deploy.sh $DEPLOY_ENV'</span>
+      }
+    }
+
+  }
+
+  <span class="prop">post</span> {
+    <span class="fn">always</span>  { <span class="fn">cleanWs</span>() }
+    <span class="fn">success</span> { <span class="fn">slackSend</span> <span class="str">'✅ Build OK'</span> }
+    <span class="fn">failure</span> { <span class="fn">slackSend</span> <span class="str">'❌ Build FAILED'</span> }
+  }
+}</pre></div>
+      </div>
+      <!-- Components -->
+      <div class="component-list">
+        <div class="comp-item">
+          <div class="comp-bar" style="background:#FF7B72"></div>
+          <div><div class="comp-name" style="color:#FF7B72">pipeline { }</div><div class="comp-desc">The root block. Everything lives inside this. Marks the file as a Declarative Pipeline.</div></div>
+        </div>
+        <div class="comp-item">
+          <div class="comp-bar" style="background:var(--blue)"></div>
+          <div><div class="comp-name" style="color:var(--blue)">agent</div><div class="comp-desc">Where to run. <code>any</code> = any agent. Use <code>docker</code>, <code>label</code>, or <code>kubernetes</code> for specifics.</div></div>
+        </div>
+        <div class="comp-item">
+          <div class="comp-bar" style="background:var(--orange)"></div>
+          <div><div class="comp-name" style="color:var(--orange)">environment { }</div><div class="comp-desc">Define env vars accessible in all stages. Can also inject from secrets managers.</div></div>
+        </div>
+        <div class="comp-item">
+          <div class="comp-bar" style="background:var(--yellow)"></div>
+          <div><div class="comp-name" style="color:var(--yellow)">stage('Name') { }</div><div class="comp-desc">Logical grouping shown in the Jenkins UI. Makes progress visible. Each stage runs sequentially (or parallel with <code>parallel</code>).</div></div>
+        </div>
+        <div class="comp-item">
+          <div class="comp-bar" style="background:var(--green)"></div>
+          <div><div class="comp-name" style="color:var(--green)">steps { }</div><div class="comp-desc">The actual commands: <code>sh</code>, <code>bat</code>, <code>docker</code>, <code>git</code>, <code>withCredentials</code>, custom steps.</div></div>
+        </div>
+        <div class="comp-item">
+          <div class="comp-bar" style="background:var(--purple)"></div>
+          <div><div class="comp-name" style="color:var(--purple)">post { }</div><div class="comp-desc">Runs after all stages. Conditions: <code>always</code>, <code>success</code>, <code>failure</code>, <code>unstable</code>, <code>cleanup</code>.</div></div>
+        </div>
+        <div class="comp-item">
+          <div class="comp-bar" style="background:var(--muted)"></div>
+          <div><div class="comp-name" style="color:var(--muted)">when { }</div><div class="comp-desc">Conditionally run a stage. Filter by <code>branch</code>, <code>environment</code>, <code>expression</code>, or <code>tag</code>.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 7 — LOCAL → SERVER
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s7">
+  <div class="slide-header">
+    <span class="slide-tag orange">06 / DEPLOY</span>
+    <span style="color:var(--border)">─────</span>
+    <span>Local → Server: Moving Your Jenkinsfile</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:12px">
+    <div class="deploy-steps" style="flex:1">
+      <div class="deploy-step" style="border-radius:8px 0 0 8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="step-badge">1</div>
+          <span class="deploy-icon">📄</span>
+        </div>
+        <div class="deploy-title">Create Locally</div>
+        <div class="deploy-code">
+<span class="hl">myproject/</span>
+├── src/
+├── tests/
+├── <span class="cmd">Jenkinsfile</span>  ← here
+├── Dockerfile
+└── README.md
+        </div>
+      </div>
+      <div class="deploy-step">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="step-badge">2</div>
+          <span class="deploy-icon">📦</span>
+        </div>
+        <div class="deploy-title">Commit &amp; Push</div>
+        <div class="deploy-code">
+<span class="cmd">git add</span> Jenkinsfile
+<span class="cmd">git commit</span> -m \
+  "Add pipeline"
+<span class="cmd">git push</span> origin main
+
+<span class="hl"># Jenkins reads it
+# from Git — no
+# manual copy!</span>
+        </div>
+      </div>
+      <div class="deploy-step">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="step-badge">3</div>
+          <span class="deploy-icon">⚙️</span>
+        </div>
+        <div class="deploy-title">Configure Job</div>
+        <div class="deploy-code">
+Jenkins UI:
+<span class="hl">New Item</span>
+  → Pipeline
+<span class="hl">Definition:</span>
+  Pipeline from SCM
+<span class="hl">SCM:</span> Git
+<span class="cmd">Repo URL:</span> paste
+<span class="cmd">Branch:</span> */main
+  → Save
+        </div>
+      </div>
+      <div class="deploy-step" style="border-radius:0 8px 8px 0">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="step-badge">4</div>
+          <span class="deploy-icon">🚀</span>
+        </div>
+        <div class="deploy-title">Trigger &amp; Verify</div>
+        <div class="deploy-code">
+<span class="hl"># Auto trigger:</span>
+git push → webhook
+→ Jenkins runs
+
+<span class="hl"># Manual trigger:</span>
+Click "Build Now"
+
+<span class="cmd"># Check results:</span>
+Blue Ocean UI
+Console Output
+Stage View
+        </div>
+      </div>
+    </div>
+    <div class="tip-bar">
+      💡 <span><strong>Shared Library:</strong> Extract common stages into a shared library repo — import with <code style="font-family:var(--font-mono)">@Library('my-lib')</code> and reuse across every project.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 8 — RECAP
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s8">
+  <div class="slide-header">
+    <span class="slide-tag orange">07 / RECAP</span>
+    <span style="color:var(--border)">─────</span>
+    <span>Key Takeaways</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:12px">
+    <div class="recap-grid" style="flex:1">
+      <div class="recap-card" style="border-top:2px solid var(--orange)">
+        <div class="recap-num">01 / WHAT</div>
+        <div class="recap-title">🖥️ What is Jenkins</div>
+        <div class="recap-body">Open-source automation server. Runs your build, test, and deploy pipeline on every code change.</div>
+      </div>
+      <div class="recap-card" style="border-top:2px solid var(--red)">
+        <div class="recap-num">02 / WHY</div>
+        <div class="recap-title">⚡ Why Jenkins</div>
+        <div class="recap-body">Eliminates manual steps, provides instant feedback, consistent environments, and a full audit trail.</div>
+      </div>
+      <div class="recap-card" style="border-top:2px solid var(--blue)">
+        <div class="recap-num">03 / CI/CD</div>
+        <div class="recap-title">🔄 CI/CD Pipeline</div>
+        <div class="recap-body">Push → Build → Test → Package → Deploy. CI = fast feedback. CD = reliable delivery.</div>
+      </div>
+      <div class="recap-card" style="border-top:2px solid var(--yellow)">
+        <div class="recap-num">04 / SERVER</div>
+        <div class="recap-title">⚙️ Server Architecture</div>
+        <div class="recap-body">Master orchestrates, agents execute. Webhook fires on push. Jenkinsfile defines everything.</div>
+      </div>
+      <div class="recap-card" style="border-top:2px solid var(--green)">
+        <div class="recap-num">05 / JENKINSFILE</div>
+        <div class="recap-title">📄 Jenkinsfile</div>
+        <div class="recap-body"><code style="font-family:var(--font-mono);font-size:16px">pipeline → agent → environment → stages → steps → post</code></div>
+      </div>
+      <div class="recap-card" style="border-top:2px solid var(--purple)">
+        <div class="recap-num">06 / DEPLOY</div>
+        <div class="recap-title">🚀 Local → Server</div>
+        <div class="recap-body">Commit Jenkinsfile to Git → configure Pipeline job → link repo → auto-triggers on push.</div>
+      </div>
+    </div>
+    <div class="next-cta">
+      <div>
+        <div style="font-size:24.5px;font-weight:600;margin-bottom:3px">Ready to see it in action?</div>
+        <div style="font-size:20.5px;color:var(--muted)">Up next: live pipeline simulation demo</div>
+      </div>
+      <button class="cta-btn" onclick="goToSlide(8)">▶ Run Demo →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 9 — DEMO
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s9">
+  <!-- Demo Header -->
+  <div class="demo-header">
+    <div class="demo-title">
+      <span class="slide-tag green">DEMO</span>
+      <span>Pipeline Simulator</span>
+      <span id="build-num" style="color:var(--muted);font-size:17.5px"></span>
+    </div>
+    <div class="demo-controls">
+      <label class="fail-toggle">
+        <input type="checkbox" id="fail-toggle"/>
+        Simulate Test Failure
+      </label>
+      <button class="reset-btn" id="resetBtn" onclick="resetDemo()">↺ Reset</button>
+      <button class="run-btn" id="runBtn" onclick="runPipeline()">▶ Run Pipeline</button>
+    </div>
+  </div>
+
+  <div class="demo-body">
+    <!-- LEFT: Jenkinsfile -->
+    <div class="demo-left">
+      <div class="panel-label">
+        <span>📄 Jenkinsfile</span>
+        <span style="color:var(--green);font-size:14.5px">● SCM</span>
+      </div>
+      <div class="jf-panel">
+        <div class="jf-editor" id="jf-viewer">
+<span id="jf-line-pipeline" class="kw">pipeline</span> {
+
+  <span class="prop">agent</span> { <span class="prop">docker</span> { <span class="val">image</span> <span class="str">'node:20-alpine'</span> } }
+
+  <span class="prop">environment</span> {
+    <span class="fn">APP</span>     = <span class="str">'my-service'</span>
+    <span class="fn">VERSION</span> = <span class="str">'1.4.2'</span>
+    <span class="fn">REGISTRY</span>= <span class="str">'registry.acme.io'</span>
+  }
+
+  <span class="prop">stages</span> {
+
+<span id="jf-checkout" class="hl-stage">    <span class="kw">stage</span>(<span class="str">'Checkout'</span>) {
+      <span class="prop">steps</span> {
+        <span class="fn">checkout</span> scm
+        sh <span class="str">'git log --oneline -5'</span>
+      }
+    }
+</span>
+<span id="jf-build" class="hl-stage">    <span class="kw">stage</span>(<span class="str">'Build'</span>) {
+      <span class="prop">steps</span> {
+        sh <span class="str">'npm ci'</span>
+        sh <span class="str">'npm run build'</span>
+        sh <span class="str">'docker build -t $APP:$VERSION .'</span>
+      }
+    }
+</span>
+<span id="jf-test" class="hl-stage">    <span class="kw">stage</span>(<span class="str">'Test'</span>) {
+      <span class="prop">steps</span> {
+        sh <span class="str">'npm run test:unit'</span>
+        sh <span class="str">'npm run test:integration'</span>
+        <span class="fn">junit</span> <span class="str">'test-results/*.xml'</span>
+      }
+    }
+</span>
+<span id="jf-deploy" class="hl-stage">    <span class="kw">stage</span>(<span class="str">'Deploy'</span>) {
+      <span class="prop">when</span> { branch <span class="str">'main'</span> }
+      <span class="prop">steps</span> {
+        sh <span class="str">'docker push $REGISTRY/$APP:$VERSION'</span>
+        sh <span class="str">'kubectl set image deploy/$APP app=$APP:$VERSION'</span>
+        sh <span class="str">'kubectl rollout status deploy/$APP'</span>
+      }
+    }
+</span>
+  }
+
+  <span class="prop">post</span> {
+    <span class="fn">always</span>  { <span class="fn">cleanWs</span>() }
+    <span class="fn">success</span> { <span class="fn">slackSend</span>(<span class="str">'✅ Deployed $APP:$VERSION'</span>) }
+    <span class="fn">failure</span> { <span class="fn">slackSend</span>(<span class="str">'❌ Pipeline failed — check logs'</span>) }
+  }
+}
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Stages + Console -->
+    <div class="demo-right">
+      <!-- Stages -->
+      <div class="stages-panel">
+        <div style="font-family:var(--font-mono);font-size:19px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+          <span>PIPELINE STAGES</span>
+          <span id="overall-status" style="color:var(--muted)">— idle</span>
+        </div>
+        <div class="stages-row">
+          <div class="stage-node pending" id="sn-checkout">
+            <div class="stage-icon" id="si-checkout">📥</div>
+            <div class="stage-name">Checkout</div>
+            <div class="stage-time" id="st-checkout">—</div>
+          </div>
+          <div class="stage-arrow">›</div>
+          <div class="stage-node pending" id="sn-build">
+            <div class="stage-icon" id="si-build">🔨</div>
+            <div class="stage-name">Build</div>
+            <div class="stage-time" id="st-build">—</div>
+          </div>
+          <div class="stage-arrow">›</div>
+          <div class="stage-node pending" id="sn-test">
+            <div class="stage-icon" id="si-test">🧪</div>
+            <div class="stage-name">Test</div>
+            <div class="stage-time" id="st-test">—</div>
+          </div>
+          <div class="stage-arrow">›</div>
+          <div class="stage-node pending" id="sn-deploy">
+            <div class="stage-icon" id="si-deploy">🚀</div>
+            <div class="stage-name">Deploy</div>
+            <div class="stage-time" id="st-deploy">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Console -->
+      <div class="console-panel">
+        <div class="panel-label">
+          <span>CONSOLE OUTPUT</span>
+          <span id="log-count" style="font-size:14.5px">0 lines</span>
+        </div>
+        <div class="console-output" id="console-out">
+          <div style="color:var(--muted);font-family:var(--font-mono);font-size:22px;padding:28px 0;text-align:center">
+            Press <span style="color:var(--green)">▶ Run Pipeline</span> to start the simulation
+          </div>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics-bar">
+        <div class="metric">
+          <div class="metric-label">Duration</div>
+          <div class="metric-val" id="m-duration">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Tests</div>
+          <div class="metric-val" id="m-tests">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Coverage</div>
+          <div class="metric-val" id="m-coverage">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Status</div>
+          <div class="metric-val" id="m-status">IDLE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     NAV
+════════════════════════════════════════════════════════════════════ -->
+<div id="nav">
+  <button class="nav-btn" onclick="prevSlide()">‹</button>
+  <div id="dots"></div>
+  <button class="nav-btn" onclick="nextSlide()">›</button>
+  <div id="slide-counter">1 / 9</div>
+</div>
+
+<script>
+// ── SLIDE ENGINE ──────────────────────────────────────────────────────
+const TOTAL = 9;
+let current = 0;
+
+const slides = Array.from(document.querySelectorAll('.slide'));
+const dotsEl = document.getElementById('dots');
+const counter = document.getElementById('slide-counter');
+const progress = document.getElementById('progress-bar');
+
+// Build dots
+for(let i=0;i<TOTAL;i++){
+  const d = document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.onclick=()=>goToSlide(i);
+  dotsEl.appendChild(d);
+}
+
+function goToSlide(n){
+  slides[current].classList.remove('active');
+  slides[current].classList.add('prev');
+  setTimeout(()=>slides[current].classList.remove('prev'),400);
+  current=Math.max(0,Math.min(TOTAL-1,n));
+  slides[current].classList.add('active');
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===current));
+  counter.textContent=`${current+1} / ${TOTAL}`;
+  progress.style.width=`${((current+1)/TOTAL)*100}%`;
+}
+function nextSlide(){goToSlide(current+1)}
+function prevSlide(){goToSlide(current-1)}
+
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if(e.key==='ArrowRight'||e.key===' ') nextSlide();
+  if(e.key==='ArrowLeft') prevSlide();
+});
+
+// ── DEMO ENGINE ───────────────────────────────────────────────────────
+let running=false;
+let buildCount=0;
+let timerStart=0;
+let timerInterval=null;
+let logCount=0;
+
+const consoleOut = document.getElementById('console-out');
+const runBtn = document.getElementById('runBtn');
+
+function ts(){
+  const now=new Date();
+  return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+}
+
+function log(text,type='plain'){
+  logCount++;
+  document.getElementById('log-count').textContent=`${logCount} lines`;
+  const line=document.createElement('div');
+  line.className='log-line';
+  line.innerHTML=`<span class="log-time">${ts()}</span><span class="log-text ${type}">${text}</span>`;
+  consoleOut.appendChild(line);
+  consoleOut.scrollTop=consoleOut.scrollHeight;
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+function setStage(id,state,time=''){
+  const node=document.getElementById('sn-'+id);
+  const icon=document.getElementById('si-'+id);
+  const timeEl=document.getElementById('st-'+id);
+  node.className='stage-node '+state;
+  if(state==='running') icon.innerHTML='<span class="spinner"></span>';
+  if(state==='success') icon.textContent={'checkout':'✅','build':'✅','test':'✅','deploy':'✅'}[id]||'✅';
+  if(state==='failed') icon.textContent='❌';
+  if(time) timeEl.textContent=time;
+
+  // highlight Jenkinsfile
+  const jfMap={checkout:'jf-checkout',build:'jf-build',test:'jf-test',deploy:'jf-deploy'};
+  document.querySelectorAll('.hl-stage').forEach(el=>el.classList.remove('active-stage','done-stage','fail-stage'));
+  if(state==='running') document.getElementById(jfMap[id])?.classList.add('active-stage');
+  if(state==='success') document.getElementById(jfMap[id])?.classList.add('done-stage');
+  if(state==='failed') document.getElementById(jfMap[id])?.classList.add('fail-stage');
+}
+
+function setOverall(text,color){
+  const el=document.getElementById('overall-status');
+  el.textContent=text;
+  el.style.color=color;
+}
+
+function setMetric(id,val,cls=''){
+  const el=document.getElementById('m-'+id);
+  el.textContent=val;
+  el.className='metric-val'+(cls?' '+cls:'');
+}
+
+function resetDemo(){
+  if(running) return;
+  ['checkout','build','test','deploy'].forEach(id=>{
+    document.getElementById('sn-'+id).className='stage-node pending';
+    document.getElementById('si-'+id).textContent={'checkout':'📥','build':'🔨','test':'🧪','deploy':'🚀'}[id];
+    document.getElementById('st-'+id).textContent='—';
+  });
+  document.querySelectorAll('.hl-stage').forEach(el=>el.classList.remove('active-stage','done-stage','fail-stage'));
+  consoleOut.innerHTML='<div style="color:var(--muted);font-family:var(--font-mono);font-size:22px;padding:28px 0;text-align:center">Press <span style="color:var(--green)">▶ Run Pipeline</span> to start the simulation</div>';
+  setOverall('— idle','var(--muted)');
+  setMetric('duration','—');setMetric('tests','—');setMetric('coverage','—');
+  setMetric('status','IDLE');
+  logCount=0;document.getElementById('log-count').textContent='0 lines';
+  document.getElementById('build-num').textContent='';
+  clearInterval(timerInterval);
+  runBtn.textContent='▶ Run Pipeline';
+  runBtn.className='run-btn';
+  runBtn.disabled=false;
+}
+
+async function runPipeline(){
+  if(running) return;
+  running=true;
+  const willFail=document.getElementById('fail-toggle').checked;
+  buildCount++;
+  runBtn.textContent='● Running...';
+  runBtn.className='run-btn running';
+  runBtn.disabled=true;
+  consoleOut.innerHTML='';
+  logCount=0;
+
+  document.getElementById('build-num').textContent=`  #${buildCount}`;
+  setOverall('● RUNNING','var(--yellow)');
+  timerStart=Date.now();
+  setMetric('status','RUNNING','yellow');
+
+  // Live timer
+  timerInterval=setInterval(()=>{
+    const s=((Date.now()-timerStart)/1000).toFixed(1);
+    setMetric('duration',s+'s');
+  },100);
+
+  log('Started by SCM change (webhook: push to main)','info');
+  log('Fetching Jenkinsfile from git@github.com:acme/my-service.git','plain');
+  log('Using Docker agent: node:20-alpine','plain');
+  await sleep(500);
+
+  // ── CHECKOUT ──
+  setStage('checkout','running');
+  const t0=Date.now();
+  log('','plain');
+  log('╔══════════════════════════════╗','header');
+  log('  STAGE: Checkout              ','header');
+  log('╚══════════════════════════════╝','header');
+  await sleep(300);
+  log('$ git checkout main','cmd');
+  await sleep(350);
+  log("Switched to branch 'main'","ok");
+  log("Your branch is up to date with 'origin/main'.",'plain');
+  await sleep(200);
+  log('$ git log --oneline -5','cmd');
+  await sleep(200);
+  log('a3f91c2 feat: add retry logic to payment service','plain');
+  log('b78d430 fix: null pointer in UserService#getById','plain');
+  log('cc02911 chore: update dependencies','plain');
+  await sleep(400);
+  const checkout_t=((Date.now()-t0)/1000).toFixed(2)+'s';
+  setStage('checkout','success',checkout_t);
+  log(`✓ Checkout completed in ${checkout_t}`,'ok');
+
+  // ── BUILD ──
+  const t1=Date.now();
+  setStage('build','running');
+  log('','plain');
+  log('╔══════════════════════════════╗','header');
+  log('  STAGE: Build                 ','header');
+  log('╚══════════════════════════════╝','header');
+  await sleep(200);
+  log('$ npm ci','cmd');
+  await sleep(300);
+  log('added 847 packages in 4.2s','plain');
+  await sleep(200);
+  log('$ npm run build','cmd');
+  await sleep(300);
+  log('> my-service@1.4.2 build','plain');
+  log('> tsc --project tsconfig.prod.json && webpack --config webpack.prod.js','plain');
+  await sleep(500);
+  log('webpack 5.89.0 compiled successfully in 2341 ms','ok');
+  log('Assets: main.js (156 KiB), vendor.js (842 KiB)','plain');
+  await sleep(300);
+  log('$ docker build -t my-service:1.4.2 .','cmd');
+  await sleep(300);
+  log('[1/5] FROM node:20-alpine','plain');
+  log('[2/5] COPY package*.json ./','plain');
+  log('[3/5] RUN npm ci --only=production','plain');
+  log('[4/5] COPY dist/ ./dist/','plain');
+  log('[5/5] CMD ["node","dist/server.js"]','plain');
+  await sleep(300);
+  log('Successfully built 3a7f89b2c1d4','ok');
+  log('Successfully tagged my-service:1.4.2','ok');
+  const build_t=((Date.now()-t1)/1000).toFixed(2)+'s';
+  setStage('build','success',build_t);
+  log(`✓ Build completed in ${build_t}`,'ok');
+
+  // ── TEST ──
+  const t2=Date.now();
+  setStage('test','running');
+  log('','plain');
+  log('╔══════════════════════════════╗','header');
+  log('  STAGE: Test                  ','header');
+  log('╚══════════════════════════════╝','header');
+  await sleep(200);
+  log('$ npm run test:unit','cmd');
+  await sleep(400);
+
+  if(willFail){
+    log('PASS  src/services/UserService.test.ts','ok');
+    log('PASS  src/services/AuthService.test.ts','ok');
+    log('FAIL  src/services/PaymentService.test.ts','err');
+    await sleep(300);
+    log('  ● PaymentService > processRefund > should handle network timeout','err');
+    log('    Expected: "TIMEOUT_ERROR"','err');
+    log('    Received: "NETWORK_UNAVAILABLE"','err');
+    log('    at Object.<anonymous> (PaymentService.test.ts:87:25)','err');
+    await sleep(200);
+    log('Tests: 2 failed, 1 todo, 89 passed, 92 total','warn');
+    log('Coverage: 71.4% Stmts | 68.2% Branch','warn');
+    const test_t=((Date.now()-t2)/1000).toFixed(2)+'s';
+    setStage('test','failed',test_t);
+    log(`✗ Test stage FAILED in ${test_t}`,'err');
+    setMetric('tests','2 FAILED','red');
+    setMetric('coverage','71.4%','red');
+
+    // Post failure
+    log('','plain');
+    log('╔══════════════════════════════╗','header');
+    log('  POST: failure               ','header');
+    log('╚══════════════════════════════╝','header');
+    log('$ cleanWs()','cmd');
+    log('Workspace cleaned','plain');
+    log("Sending Slack notification: '❌ Pipeline failed — check logs'",'warn');
+    await sleep(300);
+
+    clearInterval(timerInterval);
+    const total_t=((Date.now()-timerStart)/1000).toFixed(1)+'s';
+    setMetric('duration',total_t);
+    setMetric('status','FAILED','red');
+    setOverall('✕ FAILED','var(--red)');
+    log('','plain');
+    log(`Pipeline FAILED after ${total_t} — Deploy stage skipped`,'err');
+    runBtn.textContent='✕ Failed';
+    runBtn.className='run-btn failed';
+    runBtn.disabled=false;
+    running=false;
+    return;
+  }
+
+  // Pass
+  log('PASS  src/services/UserService.test.ts (23 tests)','ok');
+  log('PASS  src/services/AuthService.test.ts (18 tests)','ok');
+  log('PASS  src/services/PaymentService.test.ts (11 tests)','ok');
+  log('PASS  src/controllers/ApiController.test.ts (34 tests)','ok');
+  await sleep(300);
+  log('$ npm run test:integration','cmd');
+  await sleep(400);
+  log('PASS  tests/integration/checkout.test.ts','ok');
+  log('PASS  tests/integration/auth.test.ts','ok');
+  await sleep(200);
+  log('Tests: 0 failed, 2 todo, 112 passed, 114 total','ok');
+  log('Coverage: 87.3% Stmts | 82.1% Branch | 79.5% Functions','ok');
+  const test_t=((Date.now()-t2)/1000).toFixed(2)+'s';
+  setStage('test','success',test_t);
+  setMetric('tests','114 ✓','green');
+  setMetric('coverage','87.3%','green');
+  log(`✓ All tests passed in ${test_t}`,'ok');
+
+  // ── DEPLOY ──
+  const t3=Date.now();
+  setStage('deploy','running');
+  log('','plain');
+  log('╔══════════════════════════════╗','header');
+  log('  STAGE: Deploy                ','header');
+  log('╚══════════════════════════════╝','header');
+  await sleep(200);
+  log('Branch: main — deploy gate passed','ok');
+  log('$ docker push registry.acme.io/my-service:1.4.2','cmd');
+  await sleep(500);
+  log('The push refers to repository [registry.acme.io/my-service]','plain');
+  log('1.4.2: digest: sha256:3e7f...a91b size: 1847','ok');
+  await sleep(200);
+  log('$ kubectl set image deploy/my-service app=my-service:1.4.2','cmd');
+  await sleep(300);
+  log('deployment.apps/my-service image updated','ok');
+  log('$ kubectl rollout status deploy/my-service','cmd');
+  await sleep(400);
+  log('Waiting for deployment "my-service" rollout to finish...','plain');
+  await sleep(300);
+  log('1 of 3 updated replicas are available...','plain');
+  await sleep(250);
+  log('2 of 3 updated replicas are available...','plain');
+  await sleep(250);
+  log('3 of 3 updated replicas are available...','plain');
+  await sleep(200);
+  log('deployment "my-service" successfully rolled out','ok');
+  const deploy_t=((Date.now()-t3)/1000).toFixed(2)+'s';
+  setStage('deploy','success',deploy_t);
+  log(`✓ Deploy completed in ${deploy_t}`,'ok');
+
+  // Post success
+  log('','plain');
+  log('╔══════════════════════════════╗','header');
+  log('  POST: success + always       ','header');
+  log('╚══════════════════════════════╝','header');
+  log('$ cleanWs()','cmd');
+  log('Workspace cleaned','plain');
+  log("Sending Slack notification: '✅ Deployed my-service:1.4.2'",'ok');
+  await sleep(200);
+
+  clearInterval(timerInterval);
+  const total_t=((Date.now()-timerStart)/1000).toFixed(1)+'s';
+  setMetric('duration',total_t);
+  setMetric('status','SUCCESS','green');
+  setOverall('✓ SUCCESS','var(--green)');
+  log('','plain');
+  log(`✓ Pipeline SUCCESS in ${total_t} — my-service:1.4.2 is live 🚀`,'ok');
+  runBtn.textContent='✓ Success';
+  runBtn.className='run-btn';
+  runBtn.style.background='var(--green)';
+  runBtn.disabled=false;
+  running=false;
+}
+</script>
+</body>
+</html>
