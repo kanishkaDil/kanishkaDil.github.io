@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Jenkins Pipeline Types — Microlearning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0D1117;
+  --surface:#161B22;
+  --surface2:#21262D;
+  --border:#30363D;
+  --orange:#F97316;
+  --orange-dim:#7C3813;
+  --green:#3FB950;
+  --green-dim:#1A3E22;
+  --blue:#58A6FF;
+  --blue-dim:#1B3A6B;
+  --purple:#BC8CFF;
+  --red:#F85149;
+  --yellow:#E3B341;
+  --text:#E6EDF3;
+  --muted:#8B949E;
+  --code-bg:#0D1117;
+  --font-mono:'JetBrains Mono',monospace;
+  --font-body:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-body)}
+
+/* ─── SLIDE ENGINE ─────────────────────────────────────────────────── */
+#app{width:100vw;height:100vh;position:relative;overflow:hidden}
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:0;opacity:0;pointer-events:none;
+  transition:opacity .4s ease,transform .4s ease;
+  transform:translateX(40px);
+}
+.slide.active{opacity:1;pointer-events:all;transform:translateX(0)}
+.slide.prev{opacity:0;transform:translateX(-40px)}
+
+/* ─── NAV ──────────────────────────────────────────────────────────── */
+#nav{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:12px;z-index:100;
+  background:rgba(22,27,34,.9);border:1px solid var(--border);
+  border-radius:40px;padding:10px 18px;backdrop-filter:blur(12px);
+}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--border);cursor:pointer;transition:all .2s}
+.dot.active{background:var(--orange);transform:scale(1.4)}
+.dot:hover{background:var(--muted)}
+.nav-btn{
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:26px;padding:0 4px;transition:color .2s;line-height:1;
+  font-family:var(--font-mono);
+}
+.nav-btn:hover{color:var(--text)}
+#slide-counter{font-family:var(--font-mono);font-size:16px;color:var(--muted);min-width:40px;text-align:center}
+#progress-bar{
+  position:fixed;top:0;left:0;height:2px;background:var(--orange);
+  transition:width .4s ease;z-index:200;
+  box-shadow:0 0 8px var(--orange);
+}
+
+/* ─── SLIDE CHROME ─────────────────────────────────────────────────── */
+.slide-header{
+  display:flex;align-items:center;gap:14px;
+  padding:20px 52px 0;
+  font-family:var(--font-mono);font-size:20.5px;color:var(--muted);
+  flex-shrink:0;
+}
+.slide-tag{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:4px;padding:4px 12px;font-size:19px;
+  font-family:var(--font-mono);
+}
+.slide-tag.orange{border-color:var(--orange-dim);color:var(--orange)}
+.slide-tag.green{border-color:var(--green-dim);color:var(--green)}
+.slide-tag.blue{border-color:var(--blue-dim);color:var(--blue)}
+.slide-tag.purple{border-color:rgba(188,140,255,.3);color:var(--purple)}
+.slide-content{flex:1;padding:20px 56px 86px;overflow:hidden}
+
+/* ─── TYPOGRAPHY ───────────────────────────────────────────────────── */
+.title-xl{font-size:clamp(60px,6.5vw,115px);font-weight:700;line-height:1.0;letter-spacing:-2px}
+.title-lg{font-size:clamp(40px,4vw,68px);font-weight:700;line-height:1.1;letter-spacing:-1px}
+.title-md{font-size:clamp(28px,2.5vw,42px);font-weight:600}
+.subtitle{font-size:clamp(20px,1.7vw,28px);color:var(--muted);font-weight:300;line-height:1.5}
+.accent{color:var(--orange)}
+.accent-green{color:var(--green)}
+.accent-blue{color:var(--blue)}
+.accent-purple{color:var(--purple)}
+.mono{font-family:var(--font-mono)}
+
+/* ─── CARDS ────────────────────────────────────────────────────────── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:24px;
+}
+.card-grid{display:grid;gap:16px}
+.card-grid.cols-2{grid-template-columns:repeat(2,1fr)}
+.card-grid.cols-3{grid-template-columns:repeat(3,1fr)}
+.card-icon{font-size:44px;margin-bottom:12px}
+.card-title{font-size:23px;font-weight:600;margin-bottom:8px}
+.card-body{font-size:20px;color:var(--muted);line-height:1.6}
+.card.orange-top{border-top:3px solid var(--orange)}
+.card.green-top{border-top:3px solid var(--green)}
+.card.blue-top{border-top:3px solid var(--blue)}
+.card.purple-top{border-top:3px solid var(--purple)}
+
+/* ─── CODE BLOCK ───────────────────────────────────────────────────── */
+.code-wrap{
+  background:#010409;border:1px solid var(--border);border-radius:8px;
+  font-family:var(--font-mono);font-size:20px;line-height:1.8;
+  overflow:auto;position:relative;
+}
+.code-titlebar{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface2);padding:10px 16px;border-bottom:1px solid var(--border);
+}
+.dot-r{width:12px;height:12px;border-radius:50%;background:#F85149}
+.dot-y{width:12px;height:12px;border-radius:50%;background:#E3B341}
+.dot-g{width:12px;height:12px;border-radius:50%;background:#3FB950}
+.code-filename{font-size:18px;color:var(--muted);margin-left:6px}
+.code-body{padding:16px 22px}
+.kw{color:#FF7B72}
+.fn{color:#D2A8FF}
+.str{color:#A5D6FF}
+.val{color:#FFA657}
+.cmt{color:#8B949E;font-style:italic}
+.prop{color:#79C0FF}
+
+/* ─── SLIDE 1 — TITLE ──────────────────────────────────────────────── */
+#s1{
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 60% 50% at 80% 40%, rgba(249,115,22,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(88,166,255,.05) 0%, transparent 60%);
+}
+.s1-layout{
+  flex:1;display:flex;flex-direction:column;justify-content:center;
+  padding:0 48px 60px;gap:24px;
+}
+.s1-badge{
+  display:inline-flex;align-items:center;gap:10px;
+  background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);
+  border-radius:20px;padding:7px 18px;
+  font-family:var(--font-mono);font-size:20px;color:var(--orange);
+  width:fit-content;
+}
+.badge-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.s1-toc{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;}
+.toc-item{
+  font-family:var(--font-mono);font-size:19px;color:var(--muted);
+  border:1px solid var(--border);border-radius:4px;padding:6px 14px;
+}
+.toc-item span{color:var(--orange);margin-right:8px}
+
+/* ─── DEFINITION BOX ───────────────────────────────────────────────── */
+.definition-box{
+  background:var(--surface);border-left:4px solid var(--orange);
+  border-radius:0 8px 8px 0;padding:24px 32px;
+  font-size:26px;line-height:1.65;margin-bottom:16px;
+}
+.definition-box.blue-left{border-left-color:var(--blue)}
+.definition-box.green-left{border-left-color:var(--green)}
+
+/* ─── COMPARE GRID ─────────────────────────────────────────────────── */
+.compare-grid{display:grid;grid-template-columns:1fr 50px 1fr;gap:0;height:100%}
+.compare-col{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;overflow:hidden}
+.compare-col.bad{border-top:3px solid var(--red)}
+.compare-col.good{border-top:3px solid var(--green)}
+.compare-col.orange-top{border-top:3px solid var(--orange)}
+.compare-col.blue-top{border-top:3px solid var(--blue)}
+.compare-arrow{display:flex;align-items:center;justify-content:center;font-size:40px;color:var(--orange)}
+.compare-header{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:600;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.compare-item{
+  display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;
+  font-size:20px;line-height:1.5;
+}
+.compare-item .icon{font-size:26px;flex-shrink:0;margin-top:1px}
+
+/* ─── ADVANTAGE ROWS ───────────────────────────────────────────────── */
+.adv-list{display:flex;flex-direction:column;gap:10px}
+.adv-item{
+  display:flex;align-items:flex-start;gap:14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:14px 18px;
+}
+.adv-item .adv-icon{font-size:28px;flex-shrink:0;margin-top:2px}
+.adv-item .adv-text{}
+.adv-title{font-size:21px;font-weight:600;margin-bottom:3px}
+.adv-desc{font-size:18px;color:var(--muted);line-height:1.5}
+
+/* ─── WHEN TO USE ──────────────────────────────────────────────────── */
+.when-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;height:100%}
+.when-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:14px}
+.when-box.orange-top{border-top:3px solid var(--orange)}
+.when-box.blue-top{border-top:3px solid var(--blue)}
+.when-header{display:flex;align-items:center;gap:12px;font-size:22px;font-weight:600;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.when-item{display:flex;align-items:flex-start;gap:10px;font-size:19px;line-height:1.5}
+.when-bullet{font-size:22px;flex-shrink:0;margin-top:1px}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<!-- Back link -->
+<a href="jenkins-demo.html"
+   style="position:fixed;top:18px;left:24px;z-index:300;
+          display:inline-flex;align-items:center;gap:7px;
+          color:var(--muted);text-decoration:none;font-family:var(--font-mono);font-size:17px;
+          background:rgba(22,27,34,.85);border:1px solid var(--border);
+          border-radius:20px;padding:6px 16px;backdrop-filter:blur(8px);
+          transition:color .2s,border-color .2s;"
+   onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--orange)'"
+   onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">
+  ← Jenkins Demo
+</a>
+
+<div id="app">
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 1 — TITLE
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide active" id="s1">
+  <div class="slide-header">
+    <span class="slide-tag orange">Jenkins</span>
+    <span>Pipeline Types — Microlearning</span>
+  </div>
+  <div class="s1-layout">
+    <div class="s1-badge"><span class="badge-dot"></span>Jenkins CI/CD</div>
+    <div class="title-xl">Pipeline<br><span class="accent">Script</span> vs<br>Script from <span class="accent">SCM</span></div>
+    <div class="subtitle">Understand how to define your Jenkins pipeline,<br>where to store it, and which approach fits your team.</div>
+    <div class="s1-toc">
+      <div class="toc-item"><span>01</span>Pipeline Script</div>
+      <div class="toc-item"><span>02</span>Pipeline Script from SCM</div>
+      <div class="toc-item"><span>03</span>Advantages</div>
+      <div class="toc-item"><span>04</span>Comparison</div>
+      <div class="toc-item"><span>05</span>When to Use</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 2 — WHAT IS PIPELINE SCRIPT
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="slide-header">
+    <span class="slide-tag orange">01</span>
+    <span>Pipeline Script</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:16px;">
+    <div class="title-md" style="margin-bottom:4px;">What is <span class="accent">Pipeline Script</span>?</div>
+    <div class="definition-box">
+      A <strong>Pipeline Script</strong> is a Groovy-based pipeline definition typed
+      <strong>directly into the Jenkins job configuration UI</strong>. The script lives
+      inside Jenkins — no external files needed.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;min-height:0;">
+      <div class="code-wrap">
+        <div class="code-titlebar">
+          <div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div>
+          <span class="code-filename">Jenkins UI → Pipeline → Script</span>
+        </div>
+        <div class="code-body">
+<span class="prop">pipeline</span> {<br>
+&nbsp;&nbsp;<span class="prop">agent</span> <span class="val">any</span><br>
+<br>
+&nbsp;&nbsp;<span class="prop">stages</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">stage</span>(<span class="str">'Build'</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">steps</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">echo</span> <span class="str">'Building...'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">sh</span> <span class="str">'mvn clean package'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">stage</span>(<span class="str">'Test'</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">steps</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">sh</span> <span class="str">'mvn test'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">stage</span>(<span class="str">'Deploy'</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">steps</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">echo</span> <span class="str">'Deploying...'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}<br>
+}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="card orange-top">
+          <div class="card-title">🖊️ Stored in Jenkins</div>
+          <div class="card-body">The Groovy script is saved inside the Jenkins job config — not in your source code repository.</div>
+        </div>
+        <div class="card orange-top">
+          <div class="card-title">⚡ Instant to set up</div>
+          <div class="card-body">Just paste or type the script in the job's Pipeline section. No repository access required.</div>
+        </div>
+        <div class="card orange-top">
+          <div class="card-title">🔧 Editable in the UI</div>
+          <div class="card-body">Changes are made directly in the Jenkins interface without touching any source files.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 3 — PIPELINE SCRIPT FROM SCM
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="slide-header">
+    <span class="slide-tag blue">02</span>
+    <span>Pipeline Script from SCM</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:16px;">
+    <div class="title-md" style="margin-bottom:4px;">What is <span class="accent-blue">Pipeline Script from SCM</span>?</div>
+    <div class="definition-box blue-left">
+      <strong>Pipeline Script from SCM</strong> stores your pipeline definition as a
+      <strong>Jenkinsfile</strong> inside your source code repository (Git, SVN, etc.).
+      Jenkins fetches and runs it automatically on every build.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;min-height:0;">
+      <div class="code-wrap">
+        <div class="code-titlebar">
+          <div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div>
+          <span class="code-filename">Jenkinsfile &nbsp;(root of your repo)</span>
+        </div>
+        <div class="code-body">
+<span class="cmt">// Jenkinsfile lives in Git alongside your code</span><br>
+<span class="prop">pipeline</span> {<br>
+&nbsp;&nbsp;<span class="prop">agent</span> <span class="val">any</span><br>
+<br>
+&nbsp;&nbsp;<span class="prop">stages</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">stage</span>(<span class="str">'Checkout'</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">steps</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">checkout</span> <span class="val">scm</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">stage</span>(<span class="str">'Build'</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">steps</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">sh</span> <span class="str">'mvn clean package'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">stage</span>(<span class="str">'Deploy'</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">steps</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">echo</span> <span class="str">'Deploying to prod'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}<br>
+}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="card blue-top">
+          <div class="card-title">📁 Stored in Git</div>
+          <div class="card-body">The Jenkinsfile lives in your repository — version-tracked just like any other source file.</div>
+        </div>
+        <div class="card blue-top">
+          <div class="card-title">🔗 Jenkins points to repo</div>
+          <div class="card-body">Configure Repository URL + branch in the job. Jenkins clones the repo and reads the Jenkinsfile.</div>
+        </div>
+        <div class="card blue-top">
+          <div class="card-title">🔄 Auto-synced</div>
+          <div class="card-body">Every commit can trigger a build using the exact pipeline definition at that commit's revision.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 4 — ADVANTAGES OF PIPELINE SCRIPT
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="slide-header">
+    <span class="slide-tag orange">03a</span>
+    <span>Advantages of Pipeline Script</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:14px;">
+    <div class="title-md" style="margin-bottom:2px;">Why use <span class="accent">Pipeline Script</span>?</div>
+    <div class="adv-list">
+      <div class="adv-item">
+        <div class="adv-icon">⚡</div>
+        <div class="adv-text">
+          <div class="adv-title">Quick to start — zero repo setup</div>
+          <div class="adv-desc">Paste a Groovy script and your pipeline is live immediately. No repository, no branch config, no Jenkinsfile to commit.</div>
+        </div>
+      </div>
+      <div class="adv-item">
+        <div class="adv-icon">🧪</div>
+        <div class="adv-text">
+          <div class="adv-title">Great for prototyping and experiments</div>
+          <div class="adv-desc">Try new stages, test plugin steps, or debug a build sequence without making any git commits.</div>
+        </div>
+      </div>
+      <div class="adv-item">
+        <div class="adv-icon">🔒</div>
+        <div class="adv-text">
+          <div class="adv-title">No SCM access required</div>
+          <div class="adv-desc">Ideal when Jenkins cannot or should not connect to a source repository — air-gapped environments, quick demos, etc.</div>
+        </div>
+      </div>
+      <div class="adv-item">
+        <div class="adv-icon">🖱️</div>
+        <div class="adv-text">
+          <div class="adv-title">Simple UI-driven workflow</div>
+          <div class="adv-desc">Everything lives in one place — the Jenkins job config screen. Suitable for small teams or solo developers just learning CI/CD.</div>
+        </div>
+      </div>
+      <div class="adv-item">
+        <div class="adv-icon">🛠️</div>
+        <div class="adv-text">
+          <div class="adv-title">No external dependency</div>
+          <div class="adv-desc">The pipeline runs even if the SCM server is down, since the script is stored inside Jenkins itself.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 5 — ADVANTAGES OF PIPELINE SCRIPT FROM SCM
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s5">
+  <div class="slide-header">
+    <span class="slide-tag blue">03b</span>
+    <span>Advantages of Pipeline Script from SCM</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:14px;">
+    <div class="title-md" style="margin-bottom:2px;">Why use <span class="accent-blue">Pipeline Script from SCM</span>?</div>
+    <div class="adv-list">
+      <div class="adv-item" style="border-color:rgba(88,166,255,.3);">
+        <div class="adv-icon">📜</div>
+        <div class="adv-text">
+          <div class="adv-title">Version-controlled pipeline</div>
+          <div class="adv-desc">The Jenkinsfile history is tracked in Git. You can see who changed what, when, and why — full audit trail for free.</div>
+        </div>
+      </div>
+      <div class="adv-item" style="border-color:rgba(88,166,255,.3);">
+        <div class="adv-icon">🔍</div>
+        <div class="adv-text">
+          <div class="adv-title">Code review for the pipeline itself</div>
+          <div class="adv-desc">Pull requests, diff views, and team approval apply to pipeline changes just like application code. No silent config edits.</div>
+        </div>
+      </div>
+      <div class="adv-item" style="border-color:rgba(88,166,255,.3);">
+        <div class="adv-icon">🤝</div>
+        <div class="adv-text">
+          <div class="adv-title">Team collaboration and consistency</div>
+          <div class="adv-desc">Every developer sees the same Jenkinsfile in the repo. No surprises about what the pipeline does — it is right there in the code.</div>
+        </div>
+      </div>
+      <div class="adv-item" style="border-color:rgba(88,166,255,.3);">
+        <div class="adv-icon">🌿</div>
+        <div class="adv-text">
+          <div class="adv-title">Branch-specific pipelines (Multibranch)</div>
+          <div class="adv-desc">With Multibranch Pipeline jobs, each branch can have its own Jenkinsfile — feature branches run different stages than main.</div>
+        </div>
+      </div>
+      <div class="adv-item" style="border-color:rgba(88,166,255,.3);">
+        <div class="adv-icon">♻️</div>
+        <div class="adv-text">
+          <div class="adv-title">Disaster recovery and portability</div>
+          <div class="adv-desc">If Jenkins is wiped, just point a new job at the same repo — the pipeline definition is safely in Git, not lost with the server.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 6 — SIDE-BY-SIDE COMPARISON
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s6">
+  <div class="slide-header">
+    <span class="slide-tag green">04</span>
+    <span>Side-by-Side Comparison</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:14px;">
+    <div class="title-md">Quick <span class="accent-green">Comparison</span></div>
+    <div class="compare-grid" style="flex:1;min-height:0;">
+      <div class="compare-col orange-top">
+        <div class="compare-header">
+          <span>🖊️</span><span>Pipeline Script</span>
+        </div>
+        <div class="compare-item"><span class="icon">📍</span><div><strong>Stored in:</strong> Jenkins job config (server)</div></div>
+        <div class="compare-item"><span class="icon">⚡</span><div><strong>Setup:</strong> Instant — type and save</div></div>
+        <div class="compare-item"><span class="icon">📜</span><div><strong>Version history:</strong> None (no Git tracking)</div></div>
+        <div class="compare-item"><span class="icon">🔍</span><div><strong>Code review:</strong> Not possible</div></div>
+        <div class="compare-item"><span class="icon">🌿</span><div><strong>Per-branch config:</strong> Manual duplication</div></div>
+        <div class="compare-item"><span class="icon">♻️</span><div><strong>Recovery:</strong> Lost if Jenkins is reset</div></div>
+        <div class="compare-item"><span class="icon">✅</span><div><strong>Best for:</strong> Quick demos, prototypes, learning</div></div>
+      </div>
+      <div class="compare-arrow">⇄</div>
+      <div class="compare-col blue-top">
+        <div class="compare-header">
+          <span>📁</span><span>Pipeline Script from SCM</span>
+        </div>
+        <div class="compare-item"><span class="icon">📍</span><div><strong>Stored in:</strong> Git repository (Jenkinsfile)</div></div>
+        <div class="compare-item"><span class="icon">🔧</span><div><strong>Setup:</strong> Configure repo URL + branch in UI</div></div>
+        <div class="compare-item"><span class="icon">📜</span><div><strong>Version history:</strong> Full Git log</div></div>
+        <div class="compare-item"><span class="icon">🔍</span><div><strong>Code review:</strong> PR/MR workflow applies</div></div>
+        <div class="compare-item"><span class="icon">🌿</span><div><strong>Per-branch config:</strong> Multibranch Pipeline</div></div>
+        <div class="compare-item"><span class="icon">♻️</span><div><strong>Recovery:</strong> Repo is the source of truth</div></div>
+        <div class="compare-item"><span class="icon">✅</span><div><strong>Best for:</strong> Production CI/CD, team projects</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 7 — WHEN TO USE WHICH
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s7">
+  <div class="slide-header">
+    <span class="slide-tag purple">05</span>
+    <span>When to Use Which</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:14px;">
+    <div class="title-md">Choose the <span class="accent-purple">Right Approach</span></div>
+    <div class="when-grid" style="flex:1;min-height:0;">
+
+      <div class="when-box orange-top">
+        <div class="when-header">🖊️ Use <span style="color:var(--orange);margin-left:6px;">Pipeline Script</span> when…</div>
+        <div class="when-item"><span class="when-bullet">→</span><span>You are <strong>learning Jenkins</strong> and just getting started</span></div>
+        <div class="when-item"><span class="when-bullet">→</span><span>You need a <strong>quick demo</strong> or one-off automation job</span></div>
+        <div class="when-item"><span class="when-bullet">→</span><span>You are <strong>prototyping</strong> a new pipeline idea before committing it</span></div>
+        <div class="when-item"><span class="when-bullet">→</span><span>The project has <strong>no source repository</strong> or SCM access</span></div>
+        <div class="when-item"><span class="when-bullet">→</span><span>It is a <strong>solo / internal</strong> script with no team changes expected</span></div>
+        <div class="when-item"><span class="when-bullet">→</span><span>You need the pipeline to run even when the SCM is <strong>unreachable</strong></span></div>
+      </div>
+
+      <div class="when-box blue-top">
+        <div class="when-header">📁 Use <span style="color:var(--blue);margin-left:6px;">Pipeline Script from SCM</span> when…</div>
+        <div class="when-item"><span class="when-bullet">→</span><span>The project is <strong>team-based</strong> and multiple devs will change the pipeline</span></div>
+        <div class="when-item"><span class="when-bullet">→</span><span>You want <strong>code review</strong> (PR/MR) on pipeline changes</span></div>
+        <div class="when-item"><span class="when-bullet">→</span><span>You need <strong>branch-specific pipelines</strong> via Multibranch jobs</span></div>
+        <div class="when-item"><span class="when-bullet">→</span><span>You need an <strong>audit trail</strong> for who changed the pipeline and when</span></div>
+        <div class="when-item"><span class="when-bullet">→</span><span>You want <strong>disaster recovery</strong> — rebuild Jenkins anytime from Git</span></div>
+        <div class="when-item"><span class="when-bullet">→</span><span>This is a <strong>production CI/CD pipeline</strong> — always prefer SCM</span></div>
+      </div>
+
+    </div>
+    <div style="background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.25);border-radius:8px;padding:14px 20px;font-size:20px;color:var(--green);display:flex;align-items:center;gap:12px;flex-shrink:0;">
+      <span style="font-size:24px;">💡</span>
+      <span><strong>Best practice:</strong> Always use <strong>Pipeline Script from SCM</strong> for production workloads. Treat your Jenkinsfile as code — commit it, review it, and version it alongside your application.</span>
+    </div>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<!-- ─── NAV ──────────────────────────────────────────────────────────── -->
+<div id="nav">
+  <button class="nav-btn" id="prev-btn">‹</button>
+  <div id="dots"></div>
+  <span id="slide-counter">1 / 7</span>
+  <button class="nav-btn" id="next-btn">›</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const dotsContainer = document.getElementById('dots');
+const counter = document.getElementById('slide-counter');
+const bar = document.getElementById('progress-bar');
+let cur = 0;
+
+slides.forEach((_,i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i===0?' active':'');
+  d.onclick = () => go(i);
+  dotsContainer.appendChild(d);
+});
+
+function go(n){
+  slides[cur].classList.remove('active');
+  slides[cur].classList.add('prev');
+  setTimeout(()=>slides[cur].classList.remove('prev'), 450);
+  cur = (n + slides.length) % slides.length;
+  slides[cur].classList.add('active');
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===cur));
+  counter.textContent = (cur+1)+' / '+slides.length;
+  bar.style.width = ((cur+1)/slides.length*100)+'%';
+}
+
+document.getElementById('next-btn').onclick = () => go(cur+1);
+document.getElementById('prev-btn').onclick = () => go(cur-1);
+
+document.addEventListener('keydown', e => {
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') go(cur+1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp') go(cur-1);
+});
+
+bar.style.width = (1/slides.length*100)+'%';
+</script>
+</body>
+</html>
