@@ -167,6 +167,30 @@
       transform: translateX(0);
     }
 
+    nav {
+      width: 100%;
+      max-width: 760px;
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: -40px;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      padding: 6px 16px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.03);
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    nav a:hover {
+      color: var(--text);
+      border-color: var(--accent);
+    }
+
     footer {
       margin-top: 60px;
       color: var(--muted);
@@ -176,6 +200,10 @@
   </style>
 </head>
 <body>
+
+  <nav>
+    <a href="about.html">About me →</a>
+  </nav>
 
   <header>
     <h1>My Projects</h1>
