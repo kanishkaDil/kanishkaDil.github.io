@@ -473,9 +473,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       your build, test, and release workflow.
     </div>
     <div class="s1-toc">
-      <div class="toc-item"><span>01</span>What</div>
-      <div class="toc-item"><span>02</span>Why</div>
-      <div class="toc-item"><span>03</span>CI/CD</div>
+      <div class="toc-item"><span>01</span>CI/CD</div>
+      <div class="toc-item"><span>02</span>What</div>
+      <div class="toc-item"><span>03</span>Why</div>
       <div class="toc-item"><span>04</span>Server</div>
       <div class="toc-item"><span>05</span>Jenkinsfile</div>
       <div class="toc-item"><span>06</span>Deploy</div>
@@ -489,102 +489,11 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════
-     SLIDE 2 — WHAT IS JENKINS?
-════════════════════════════════════════════════════════════════════ -->
-<div class="slide" id="s2">
-  <div class="slide-header">
-    <span class="slide-tag orange">01 / WHAT</span>
-    <span style="color:var(--border)">─────</span>
-    <span>What is Jenkins?</span>
-  </div>
-  <div class="slide-content" style="display:flex;flex-direction:column;gap:16px">
-    <div class="definition-box">
-      <span class="accent" style="font-weight:700">Jenkins</span> is an open-source 
-      <span style="color:var(--blue)">automation server</span> that helps teams 
-      <span class="accent" style="font-weight:600">build, test, and deploy</span> 
-      software continuously, reliably, and without manual intervention.
-    </div>
-    <div class="card-grid cols-3" style="flex:1">
-      <div class="card orange-top">
-        <div class="card-icon">🖥️</div>
-        <div class="card-title">Automation Server</div>
-        <div class="card-body">Runs your build &amp; test jobs automatically on every code change — no manual trigger needed.</div>
-        <div style="margin-top:14px;font-family:var(--font-mono);font-size:19px;color:var(--muted)">
-          free &amp; open source · Java-based · self-hosted
-        </div>
-      </div>
-      <div class="card blue-top">
-        <div class="card-icon">📄</div>
-        <div class="card-title">Pipeline as Code</div>
-        <div class="card-body">Define your entire workflow in a <span class="mono" style="color:var(--orange)">Jenkinsfile</span> — version-controlled, reviewable, and repeatable.</div>
-        <div style="margin-top:14px;font-family:var(--font-mono);font-size:19px;color:var(--muted)">
-          Groovy DSL · declarative syntax
-        </div>
-      </div>
-      <div class="card green-top">
-        <div class="card-icon">🔌</div>
-        <div class="card-title">Plugin Ecosystem</div>
-        <div class="card-body">1,800+ plugins to integrate with Git, Docker, Kubernetes, Slack, AWS, Jira, and virtually everything else.</div>
-        <div style="margin-top:14px;font-family:var(--font-mono);font-size:19px;color:var(--muted)">
-          Git · Docker · K8s · Slack · AWS
-        </div>
-      </div>
-    </div>
-    <div style="display:flex;gap:28px;font-family:var(--font-mono);font-size:20.5px;color:var(--muted)">
-      <span>⭐ 23k+ GitHub stars</span>
-      <span>🏢 Used by Netflix, LinkedIn, NASA</span>
-      <span>📅 Released 2011 (Hudson fork)</span>
-      <span>☕ Runs on JVM</span>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     SLIDE 3 — WHY JENKINS?
-════════════════════════════════════════════════════════════════════ -->
-<div class="slide" id="s3">
-  <div class="slide-header">
-    <span class="slide-tag orange">02 / WHY</span>
-    <span style="color:var(--border)">─────</span>
-    <span>Why Jenkins?</span>
-  </div>
-  <div class="slide-content" style="display:flex;flex-direction:column;gap:12px">
-    <div class="compare-grid" style="flex:1;align-items:stretch">
-      <div class="compare-col bad">
-        <div class="compare-header">
-          <span style="color:var(--red)">✕</span>
-          <span style="color:var(--red)">Without Jenkins</span>
-        </div>
-        <div class="compare-item"><span class="icon">😩</span><span>Manual builds — someone runs <code style="color:var(--muted);font-family:var(--font-mono)">./build.sh</code> by hand on every merge</span></div>
-        <div class="compare-item"><span class="icon">🤷</span><span>"Works on my machine" — environment drift between devs</span></div>
-        <div class="compare-item"><span class="icon">🕑</span><span>Tests run only before major releases, bugs pile up</span></div>
-        <div class="compare-item"><span class="icon">📦</span><span>Deployments are manual, error-prone, and stressful</span></div>
-        <div class="compare-item"><span class="icon">📉</span><span>No audit trail — who deployed what and when?</span></div>
-        <div class="compare-item"><span class="icon">🧩</span><span>Onboarding takes days: "ask John how to release"</span></div>
-      </div>
-      <div class="compare-arrow">→</div>
-      <div class="compare-col good">
-        <div class="compare-header">
-          <span style="color:var(--green)">✓</span>
-          <span style="color:var(--green)">With Jenkins</span>
-        </div>
-        <div class="compare-item"><span class="icon">⚡</span><span>Every <code style="color:var(--green);font-family:var(--font-mono)">git push</code> triggers a build automatically via webhook</span></div>
-        <div class="compare-item"><span class="icon">🐳</span><span>Consistent Docker-based agents — same env every time</span></div>
-        <div class="compare-item"><span class="icon">✅</span><span>Tests run on every commit, failures reported in minutes</span></div>
-        <div class="compare-item"><span class="icon">🚀</span><span>One-click or fully automatic deployments to any environment</span></div>
-        <div class="compare-item"><span class="icon">📋</span><span>Full build history, logs, and stage-by-stage visibility</span></div>
-        <div class="compare-item"><span class="icon">📖</span><span>Jenkinsfile IS the runbook — self-documenting process</span></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     SLIDE 4 — CI/CD
+     SLIDE 2 — CI/CD BIG PICTURE
 ════════════════════════════════════════════════════════════════════ -->
 <div class="slide" id="s4">
   <div class="slide-header">
-    <span class="slide-tag orange">03 / CI/CD</span>
+    <span class="slide-tag orange">01 / CI/CD</span>
     <span style="color:var(--border)">─────</span>
     <span>The Big Picture</span>
   </div>
@@ -657,6 +566,97 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       </div>
       <div style="background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.2);border-radius:6px;padding:12px 18px;flex:1;font-size:22px">
         <span style="color:var(--orange);font-weight:600">CD boundary:</span><span style="color:var(--muted)"> Package → Staging → Production. Gate with approvals for prod</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 3 — WHAT IS JENKINS?
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="slide-header">
+    <span class="slide-tag orange">02 / WHAT</span>
+    <span style="color:var(--border)">─────</span>
+    <span>What is Jenkins?</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:16px">
+    <div class="definition-box">
+      <span class="accent" style="font-weight:700">Jenkins</span> is an open-source
+      <span style="color:var(--blue)">automation server</span> that helps teams
+      <span class="accent" style="font-weight:600">build, test, and deploy</span>
+      software continuously, reliably, and without manual intervention.
+    </div>
+    <div class="card-grid cols-3" style="flex:1">
+      <div class="card orange-top">
+        <div class="card-icon">🖥️</div>
+        <div class="card-title">Automation Server</div>
+        <div class="card-body">Runs your build &amp; test jobs automatically on every code change — no manual trigger needed.</div>
+        <div style="margin-top:14px;font-family:var(--font-mono);font-size:19px;color:var(--muted)">
+          free &amp; open source · Java-based · self-hosted
+        </div>
+      </div>
+      <div class="card blue-top">
+        <div class="card-icon">📄</div>
+        <div class="card-title">Pipeline as Code</div>
+        <div class="card-body">Define your entire workflow in a <span class="mono" style="color:var(--orange)">Jenkinsfile</span> — version-controlled, reviewable, and repeatable.</div>
+        <div style="margin-top:14px;font-family:var(--font-mono);font-size:19px;color:var(--muted)">
+          Groovy DSL · declarative syntax
+        </div>
+      </div>
+      <div class="card green-top">
+        <div class="card-icon">🔌</div>
+        <div class="card-title">Plugin Ecosystem</div>
+        <div class="card-body">1,800+ plugins to integrate with Git, Docker, Kubernetes, Slack, AWS, Jira, and virtually everything else.</div>
+        <div style="margin-top:14px;font-family:var(--font-mono);font-size:19px;color:var(--muted)">
+          Git · Docker · K8s · Slack · AWS
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:28px;font-family:var(--font-mono);font-size:20.5px;color:var(--muted)">
+      <span>⭐ 23k+ GitHub stars</span>
+      <span>🏢 Used by Netflix, LinkedIn, NASA</span>
+      <span>📅 Released 2011 (Hudson fork)</span>
+      <span>☕ Runs on JVM</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 4 — WHY JENKINS?
+════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="slide-header">
+    <span class="slide-tag orange">03 / WHY</span>
+    <span style="color:var(--border)">─────</span>
+    <span>Why Jenkins?</span>
+  </div>
+  <div class="slide-content" style="display:flex;flex-direction:column;gap:12px">
+    <div class="compare-grid" style="flex:1;align-items:stretch">
+      <div class="compare-col bad">
+        <div class="compare-header">
+          <span style="color:var(--red)">✕</span>
+          <span style="color:var(--red)">Without Jenkins</span>
+        </div>
+        <div class="compare-item"><span class="icon">😩</span><span>Manual builds — someone runs <code style="color:var(--muted);font-family:var(--font-mono)">./build.sh</code> by hand on every merge</span></div>
+        <div class="compare-item"><span class="icon">🤷</span><span>"Works on my machine" — environment drift between devs</span></div>
+        <div class="compare-item"><span class="icon">🕑</span><span>Tests run only before major releases, bugs pile up</span></div>
+        <div class="compare-item"><span class="icon">📦</span><span>Deployments are manual, error-prone, and stressful</span></div>
+        <div class="compare-item"><span class="icon">📉</span><span>No audit trail — who deployed what and when?</span></div>
+        <div class="compare-item"><span class="icon">🧩</span><span>Onboarding takes days: "ask John how to release"</span></div>
+      </div>
+      <div class="compare-arrow">→</div>
+      <div class="compare-col good">
+        <div class="compare-header">
+          <span style="color:var(--green)">✓</span>
+          <span style="color:var(--green)">With Jenkins</span>
+        </div>
+        <div class="compare-item"><span class="icon">⚡</span><span>Every <code style="color:var(--green);font-family:var(--font-mono)">git push</code> triggers a build automatically via webhook</span></div>
+        <div class="compare-item"><span class="icon">🐳</span><span>Consistent Docker-based agents — same env every time</span></div>
+        <div class="compare-item"><span class="icon">✅</span><span>Tests run on every commit, failures reported in minutes</span></div>
+        <div class="compare-item"><span class="icon">🚀</span><span>One-click or fully automatic deployments to any environment</span></div>
+        <div class="compare-item"><span class="icon">📋</span><span>Full build history, logs, and stage-by-stage visibility</span></div>
+        <div class="compare-item"><span class="icon">📖</span><span>Jenkinsfile IS the runbook — self-documenting process</span></div>
       </div>
     </div>
   </div>
@@ -923,17 +923,17 @@ Stage View
   <div class="slide-content" style="display:flex;flex-direction:column;gap:12px">
     <div class="recap-grid" style="flex:1">
       <div class="recap-card" style="border-top:2px solid var(--orange)">
-        <div class="recap-num">01 / WHAT</div>
+        <div class="recap-num">02 / WHAT</div>
         <div class="recap-title">🖥️ What is Jenkins</div>
         <div class="recap-body">Open-source automation server. Runs your build, test, and deploy pipeline on every code change.</div>
       </div>
       <div class="recap-card" style="border-top:2px solid var(--red)">
-        <div class="recap-num">02 / WHY</div>
+        <div class="recap-num">03 / WHY</div>
         <div class="recap-title">⚡ Why Jenkins</div>
         <div class="recap-body">Eliminates manual steps, provides instant feedback, consistent environments, and a full audit trail.</div>
       </div>
       <div class="recap-card" style="border-top:2px solid var(--blue)">
-        <div class="recap-num">03 / CI/CD</div>
+        <div class="recap-num">01 / CI/CD</div>
         <div class="recap-title">🔄 CI/CD Pipeline</div>
         <div class="recap-body">Push → Build → Test → Package → Deploy. CI = fast feedback. CD = reliable delivery.</div>
       </div>
